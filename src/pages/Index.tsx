@@ -59,8 +59,9 @@ End Function
 
 
 ' --- ФУНКЦИЯ 2: Создание прямоугольника-контура ---
+' Контур шире и выше группы на 20мм (по 10мм с каждой стороны)
 Function CreateOutlineRect(doc As Document, bounds As BoundingBox) As Shape
-    Const OFFSET As Double = 20
+    Const OFFSET As Double = 10   ' 10мм с каждой стороны = +20мм итого
     Const STROKE_MM As Double = 0.2
 
     Dim rW As Double: rW = bounds.w + OFFSET * 2
@@ -93,7 +94,7 @@ End Function
 
 ' --- ФУНКЦИЯ 3: Позиционирование контура ---
 Sub PositionOutline(outline As Shape, bounds As BoundingBox)
-    Const OFFSET As Double = 20
+    Const OFFSET As Double = 10   ' 10мм с каждой стороны
 
     Dim cx As Double: cx = bounds.x + bounds.w / 2
     Dim cy As Double: cy = bounds.y + bounds.h / 2
@@ -133,7 +134,7 @@ const steps = [
 ];
 
 const params = [
-  { label: "Отступ контура", value: "20 мм с каждой стороны" },
+  { label: "Отступ контура", value: "20 мм итого (10 мм с каждой стороны)" },
   { label: "Толщина обводки", value: "0.2 мм" },
   { label: "Цвет обводки", value: "CMYK 0 / 0 / 0 / 100" },
   { label: "Заливка", value: "Прозрачная (нет заливки)" },
@@ -157,13 +158,13 @@ const functions = [
   {
     fn: "CreateOutlineRect()",
     role: "Создание контура",
-    desc: "Рисует прямоугольник +20 мм с каждой стороны, задаёт обводку CMYK 0/0/0/100 и прозрачную заливку.",
+    desc: "Рисует прямоугольник +20 мм по ширине и высоте (10 мм с каждой стороны), задаёт обводку CMYK 0/0/0/100 и прозрачную заливку.",
     color: "text-[#bf9c7c]",
   },
   {
     fn: "PositionOutline()",
     role: "Позиционирование",
-    desc: "Вычисляет центр исходной группы и смещает контур так, чтобы отступ был ровно 20 мм с каждой стороны.",
+    desc: "Вычисляет центр исходной группы и смещает контур так, чтобы он был шире и выше на 20 мм (10 мм с каждой стороны).",
     color: "text-[#bf7cbf]",
   },
 ];
