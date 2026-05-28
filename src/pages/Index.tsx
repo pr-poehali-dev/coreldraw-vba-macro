@@ -3,7 +3,7 @@ import Icon from "@/components/ui/icon";
 
 const vbaCode = `' ============================================
 ' Макрос CorelDRAW: Контур вокруг группы
-' Версия: 1.0
+' Версия: 1.1 — ввод отступа через диалог
 ' ============================================
 
 ' Добавьте этот тип в НАЧАЛО модуля (до всех Sub/Function):
@@ -33,17 +33,45 @@ Sub DrawGroupOutline()
         Exit Sub
     End If
 
+    ' Запрашиваем отступ у пользователя (по умолчанию 20 мм)
+    Dim inputVal As String
+    inputVal = InputBox("Введите суммарный отступ контура в мм:" & vbCrLf & _
+                        "(контур станет шире и выше на это значение)", _
+                        "Отступ контура", "20")
+
+    ' Пользователь нажал Отмена
+    If inputVal = "" Then Exit Sub
+
+    ' Проверяем, что введено число
+    If Not IsNumeric(inputVal) Then
+        MsgBox "Введите корректное числовое значение.", vbExclamation, "Ошибка"
+        Exit Sub
+    End If
+
+    Dim totalOffset As Double
+    totalOffset = CDbl(inputVal)
+
+    If totalOffset <= 0 Then
+        MsgBox "Отступ должен быть больше нуля.", vbExclamation, "Ошибка"
+        Exit Sub
+    End If
+
+    ' Половина суммарного отступа — с каждой стороны
+    Dim halfOffset As Double
+    halfOffset = totalOffset / 2
+
     Set grp = doc.ActiveSelection.Shapes(1)
 
     Dim bounds As BoundingBox
     bounds = GetGroupBounds(grp)
 
     Dim outline As Shape
-    Set outline = CreateOutlineRect(doc, bounds)
+    Set outline = CreateOutlineRect(doc, bounds, halfOffset)
 
-    PositionOutline outline, bounds
+    PositionOutline outline, bounds, halfOffset
 
-    MsgBox "Контур успешно создан!", vbInformation, "Готово"
+    MsgBox "Контур создан! Отступ: " & totalOffset & " мм (" & halfOffset & " мм с каждой стороны).", _
+           vbInformation, "Готово"
 End Sub
 
 
@@ -59,13 +87,12 @@ End Function
 
 
 ' --- ФУНКЦИЯ 2: Создание прямоугольника-контура ---
-' Контур шире и выше группы на 20мм (по 10мм с каждой стороны)
-Function CreateOutlineRect(doc As Document, bounds As BoundingBox) As Shape
-    Const OFFSET As Double = 10   ' 10мм с каждой стороны = +20мм итого
+' halfOffset — отступ с каждой стороны в мм
+Function CreateOutlineRect(doc As Document, bounds As BoundingBox, halfOffset As Double) As Shape
     Const STROKE_MM As Double = 0.2
 
-    Dim rW As Double: rW = bounds.w + OFFSET * 2
-    Dim rH As Double: rH = bounds.h + OFFSET * 2
+    Dim rW As Double: rW = bounds.w + halfOffset * 2
+    Dim rH As Double: rH = bounds.h + halfOffset * 2
 
     Dim rect As Shape
     Set rect = doc.ActiveLayer.CreateRectangle2(0, 0, rW, rH)
@@ -93,14 +120,13 @@ End Function
 
 
 ' --- ФУНКЦИЯ 3: Позиционирование контура ---
-Sub PositionOutline(outline As Shape, bounds As BoundingBox)
-    Const OFFSET As Double = 10   ' 10мм с каждой стороны
-
+' halfOffset — отступ с каждой стороны в мм
+Sub PositionOutline(outline As Shape, bounds As BoundingBox, halfOffset As Double)
     Dim cx As Double: cx = bounds.x + bounds.w / 2
     Dim cy As Double: cy = bounds.y + bounds.h / 2
 
-    Dim newX As Double: newX = cx - (bounds.w / 2 + OFFSET)
-    Dim newY As Double: newY = cy - (bounds.h / 2 + OFFSET)
+    Dim newX As Double: newX = cx - (bounds.w / 2 + halfOffset)
+    Dim newY As Double: newY = cy - (bounds.h / 2 + halfOffset)
 
     outline.SetPosition newX, newY
 End Sub`;
@@ -134,7 +160,7 @@ const steps = [
 ];
 
 const params = [
-  { label: "Отступ контура", value: "20 мм итого (10 мм с каждой стороны)" },
+  { label: "Отступ контура", value: "Задаётся в диалоге при запуске (по умолч. 20 мм)" },
   { label: "Толщина обводки", value: "0.2 мм" },
   { label: "Цвет обводки", value: "CMYK 0 / 0 / 0 / 100" },
   { label: "Заливка", value: "Прозрачная (нет заливки)" },
@@ -209,7 +235,7 @@ export default function Index() {
             CorelDRAW · VBA Macro
           </span>
         </div>
-        <span className="text-[10px] text-[#333] tracking-widest">v 1.0</span>
+        <span className="text-[10px] text-[#333] tracking-widest">v 1.1</span>
       </header>
 
       <main className="max-w-4xl mx-auto px-8 py-12">
