@@ -203,42 +203,48 @@ Sub DrawCornerDots()
     Dim maxY As Double: maxY = sel.BottomY + sel.SizeHeight
 
     ' --- Параметры точек ---
-    ' CreateEllipse2 принимает координаты в ДЮЙМАХ (не зависит от единиц документа)
-    ' LeftX/BottomY тоже возвращают дюймы при любых единицах документа
-    Const MM_TO_IN As Double = 1# / 25.4
+    ' LeftX/BottomY возвращают значения в единицах документа (мм).
+    ' CreateEllipse2 тоже работает в единицах документа.
+    ' Конвертируем только отступ и радиус из мм в единицы документа — они уже в мм, конвертация не нужна.
+    Const DOT_R  As Double = 5    ' радиус круга = 5 мм (диаметр 10 мм)
+    Const OFFSET As Double = 10   ' отступ от края выделения = 10 мм
 
-    Dim DOT_R_IN  As Double: DOT_R_IN  = 5  * MM_TO_IN  ' радиус = 5 мм
-    Dim OFFSET_IN As Double: OFFSET_IN = 10 * MM_TO_IN  ' отступ = 10 мм
-
-    Dim bLeft   As Double: bLeft   = minX * MM_TO_IN
-    Dim bBottom As Double: bBottom = minY * MM_TO_IN
-    Dim bRight  As Double: bRight  = maxX * MM_TO_IN
-    Dim bTop    As Double: bTop    = maxY * MM_TO_IN
-
-    ' Центры четырёх кругов (дюймы):
+    ' Центры четырёх кругов (мм):
     Dim cx(3) As Double, cy(3) As Double
-    cx(0) = bLeft  - OFFSET_IN - DOT_R_IN : cy(0) = bBottom - OFFSET_IN - DOT_R_IN  ' левый нижний
-    cx(1) = bRight + OFFSET_IN + DOT_R_IN : cy(1) = bBottom - OFFSET_IN - DOT_R_IN  ' правый нижний
-    cx(2) = bLeft  - OFFSET_IN - DOT_R_IN : cy(2) = bTop    + OFFSET_IN + DOT_R_IN  ' левый верхний
-    cx(3) = bRight + OFFSET_IN + DOT_R_IN : cy(3) = bTop    + OFFSET_IN + DOT_R_IN  ' правый верхний
+    cx(0) = minX - OFFSET - DOT_R : cy(0) = minY - OFFSET - DOT_R  ' левый нижний
+    cx(1) = maxX + OFFSET + DOT_R : cy(1) = minY - OFFSET - DOT_R  ' правый нижний
+    cx(2) = minX - OFFSET - DOT_R : cy(2) = maxY + OFFSET + DOT_R  ' левый верхний
+    cx(3) = maxX + OFFSET + DOT_R : cy(3) = maxY + OFFSET + DOT_R  ' правый верхний
 
     ' --- Рисуем 4 круга ---
     Dim doc As Document
     Set doc = Application.ActiveDocument
 
+    ' Массив для хранения созданных точек (для группировки)
+    Dim dots(3) As Shape
+
     Dim dot As Shape
     Dim k As Integer
     For k = 0 To 3
-        Set dot = doc.ActiveLayer.CreateEllipse2(cx(k), cy(k), DOT_R_IN, DOT_R_IN, 0, 0, False)
+        Set dot = doc.ActiveLayer.CreateEllipse2(cx(k), cy(k), DOT_R, DOT_R, 0, 0, False)
 
         ' Заливка CMYK 0/0/0/100
         dot.Fill.UniformColor.CMYKAssign 0, 0, 0, 100
 
-        ' Убираем абрис — SetNoOutline вместо Remove (CorelDRAW 26)
+        ' Убираем абрис
         dot.Outline.SetNoOutline
+
+        Set dots(k) = dot
     Next k
 
-    MsgBox "Готово! 4 круга ⌀10 мм созданы с отступом 10 мм.", _
+    ' --- Группируем 4 точки ---
+    Dim sr As New ShapeRange
+    For k = 0 To 3
+        sr.Add dots(k)
+    Next k
+    sr.Group
+
+    MsgBox "Готово! 4 круга ⌀10 мм созданы и сгруппированы.", _
            vbInformation, "Угловые точки"
 End Sub`;
 
