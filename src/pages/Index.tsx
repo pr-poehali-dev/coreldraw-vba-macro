@@ -202,43 +202,41 @@ Sub DrawCornerDots()
     Dim maxX As Double: maxX = sel.LeftX + sel.SizeWidth
     Dim maxY As Double: maxY = sel.BottomY + sel.SizeHeight
 
-    ' --- Параметры точек ---
-    Const DOT_SIZE As Double = 10   ' 10 мм — размер точки
-    Const OFFSET   As Double = 10   ' 10 мм — отступ от края выделения
+    ' --- Параметры точек (все размеры в мм, CorelDRAW 26 работает в мм) ---
+    Const DOT_SIZE As Double = 10   ' диаметр круга, мм
+    Const OFFSET   As Double = 10   ' отступ от края выделения, мм
 
-    ' Координаты центров четырёх кругов:
-    '   Левый нижний   — центр (minX - OFFSET - DOT_SIZE/2,  minY - OFFSET - DOT_SIZE/2)
-    '   Правый нижний  — центр (maxX + OFFSET + DOT_SIZE/2,  minY - OFFSET - DOT_SIZE/2)
-    '   Левый верхний  — центр (minX - OFFSET - DOT_SIZE/2,  maxY + OFFSET + DOT_SIZE/2)
-    '   Правый верхний — центр (maxX + OFFSET + DOT_SIZE/2,  maxY + OFFSET + DOT_SIZE/2)
+    Dim R As Double: R = DOT_SIZE / 2   ' радиус, мм
 
-    Dim R As Double: R = DOT_SIZE / 2   ' радиус круга
-
+    ' Центры четырёх кругов (мм):
     Dim cx(3) As Double, cy(3) As Double
-    cx(0) = minX - OFFSET - R : cy(0) = minY - OFFSET - R
-    cx(1) = maxX + OFFSET + R : cy(1) = minY - OFFSET - R
-    cx(2) = minX - OFFSET - R : cy(2) = maxY + OFFSET + R
-    cx(3) = maxX + OFFSET + R : cy(3) = maxY + OFFSET + R
+    cx(0) = minX - OFFSET - R : cy(0) = minY - OFFSET - R   ' левый нижний
+    cx(1) = maxX + OFFSET + R : cy(1) = minY - OFFSET - R   ' правый нижний
+    cx(2) = minX - OFFSET - R : cy(2) = maxY + OFFSET + R   ' левый верхний
+    cx(3) = maxX + OFFSET + R : cy(3) = maxY + OFFSET + R   ' правый верхний
 
-    ' --- Цвет заливки: CMYK 0/0/0/100 ---
-    Dim dotColor As New Color
-    dotColor.CMYKAssign 0, 0, 0, 100
+    ' --- Рисуем 4 круга ---
+    Dim doc As Document
+    Set doc = Application.ActiveDocument
 
-    ' --- Рисуем 4 круга (эллипс с равными осями = окружность) ---
+    ' Цвет заливки — создаём один раз до цикла
+    Dim fc As Color
+    Set fc = Application.CreateCMYKColor(0, 0, 0, 100)
+
     Dim dot As Shape
     Dim k As Integer
     For k = 0 To 3
-        Set dot = Application.ActiveDocument.ActiveLayer.CreateEllipse2( _
-            cx(k), cy(k), R, R)
+        ' CreateEllipse2: центр X, центр Y, радиус X, радиус Y (мм)
+        Set dot = doc.ActiveLayer.CreateEllipse2(cx(k), cy(k), R, R, 0, 0, False)
 
-        ' Заливка — чёрная CMYK 0/0/0/100
-        dot.Fill.ApplyUniform dotColor
+        ' Заливка CMYK 0/0/0/100
+        dot.Fill.ApplyUniform fc
 
-        ' Без абриса
+        ' Убираем абрис
         dot.Outline.Remove
     Next k
 
-    MsgBox "Готово! 4 угловые точки 10×10 мм созданы с отступом 10 мм.", _
+    MsgBox "Готово! 4 круга ⌀10 мм созданы с отступом 10 мм.", _
            vbInformation, "Угловые точки"
 End Sub`;
 
