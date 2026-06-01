@@ -202,35 +202,39 @@ Sub DrawCornerDots()
     Dim maxX As Double: maxX = sel.LeftX + sel.SizeWidth
     Dim maxY As Double: maxY = sel.BottomY + sel.SizeHeight
 
-    ' --- Параметры точек (все размеры в мм, CorelDRAW 26 работает в мм) ---
-    Const DOT_SIZE As Double = 10   ' диаметр круга, мм
-    Const OFFSET   As Double = 10   ' отступ от края выделения, мм
+    ' --- Параметры точек ---
+    ' LeftX/BottomY возвращают мм. CreateEllipse2 принимает дюймы.
+    Const MM_TO_IN As Double = 1# / 25.4   ' 1 мм в дюймах
 
-    Dim R As Double: R = DOT_SIZE / 2   ' радиус, мм
+    Dim DOT_R_IN  As Double: DOT_R_IN  = 5  * MM_TO_IN  ' радиус = 5 мм
+    Dim OFFSET_IN As Double: OFFSET_IN = 10 * MM_TO_IN  ' отступ = 10 мм
 
-    ' Центры четырёх кругов (мм):
+    ' Переводим bbox в дюймы
+    Dim bLeft   As Double: bLeft   = minX * MM_TO_IN
+    Dim bBottom As Double: bBottom = minY * MM_TO_IN
+    Dim bRight  As Double: bRight  = maxX * MM_TO_IN
+    Dim bTop    As Double: bTop    = maxY * MM_TO_IN
+
+    ' Центры четырёх кругов (дюймы):
     Dim cx(3) As Double, cy(3) As Double
-    cx(0) = minX - OFFSET - R : cy(0) = minY - OFFSET - R   ' левый нижний
-    cx(1) = maxX + OFFSET + R : cy(1) = minY - OFFSET - R   ' правый нижний
-    cx(2) = minX - OFFSET - R : cy(2) = maxY + OFFSET + R   ' левый верхний
-    cx(3) = maxX + OFFSET + R : cy(3) = maxY + OFFSET + R   ' правый верхний
+    cx(0) = bLeft   - OFFSET_IN - DOT_R_IN : cy(0) = bBottom - OFFSET_IN - DOT_R_IN  ' левый нижний
+    cx(1) = bRight  + OFFSET_IN + DOT_R_IN : cy(1) = bBottom - OFFSET_IN - DOT_R_IN  ' правый нижний
+    cx(2) = bLeft   - OFFSET_IN - DOT_R_IN : cy(2) = bTop    + OFFSET_IN + DOT_R_IN  ' левый верхний
+    cx(3) = bRight  + OFFSET_IN + DOT_R_IN : cy(3) = bTop    + OFFSET_IN + DOT_R_IN  ' правый верхний
 
     ' --- Рисуем 4 круга ---
     Dim doc As Document
     Set doc = Application.ActiveDocument
 
-    ' Цвет заливки — создаём один раз до цикла
-    Dim fc As Color
-    Set fc = Application.CreateCMYKColor(0, 0, 0, 100)
-
     Dim dot As Shape
     Dim k As Integer
     For k = 0 To 3
-        ' CreateEllipse2: центр X, центр Y, радиус X, радиус Y (мм)
-        Set dot = doc.ActiveLayer.CreateEllipse2(cx(k), cy(k), R, R, 0, 0, False)
+        ' CreateEllipse2(centerX, centerY, radiusX, radiusY, startAngle, endAngle, pie) — дюймы
+        Set dot = doc.ActiveLayer.CreateEllipse2(cx(k), cy(k), DOT_R_IN, DOT_R_IN, 0, 0, False)
 
         ' Заливка CMYK 0/0/0/100
-        dot.Fill.ApplyUniform fc
+        ' UniformColor.CMYKAssign задаёт цвет и автоматически переключает тип заливки
+        dot.Fill.UniformColor.CMYKAssign 0, 0, 0, 100
 
         ' Убираем абрис
         dot.Outline.Remove
