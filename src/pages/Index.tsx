@@ -220,6 +220,10 @@ Sub DrawCornerDots()
     cx(2) = minX - OFFSET - R : cy(2) = maxY + OFFSET + R
     cx(3) = maxX + OFFSET + R : cy(3) = maxY + OFFSET + R
 
+    ' --- Цвет заливки: CMYK 0/0/0/100 ---
+    Dim dotColor As New Color
+    dotColor.CMYKAssign 0, 0, 0, 100
+
     ' --- Рисуем 4 круга (эллипс с равными осями = окружность) ---
     Dim dot As Shape
     Dim k As Integer
@@ -228,8 +232,7 @@ Sub DrawCornerDots()
             cx(k), cy(k), R, R)
 
         ' Заливка — чёрная CMYK 0/0/0/100
-        dot.Fill.UniformColor.CMYKAssign 0, 0, 0, 100
-        dot.Fill.Type = cdrUniformFill
+        dot.Fill.ApplyUniform dotColor
 
         ' Без абриса
         dot.Outline.Remove
