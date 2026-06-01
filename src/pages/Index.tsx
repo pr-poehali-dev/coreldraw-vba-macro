@@ -203,18 +203,29 @@ Sub DrawCornerDots()
     Dim maxY As Double: maxY = sel.BottomY + sel.SizeHeight
 
     ' --- Параметры точек ---
-    ' LeftX/BottomY возвращают значения в единицах документа (мм).
-    ' CreateEllipse2 тоже работает в единицах документа.
-    ' Конвертируем только отступ и радиус из мм в единицы документа — они уже в мм, конвертация не нужна.
-    Const DOT_R  As Double = 5    ' радиус круга = 5 мм (диаметр 10 мм)
-    Const OFFSET As Double = 10   ' отступ от края выделения = 10 мм
+    ' LeftX/BottomY — в мм. CreateEllipse2 — в ДЮЙМАХ.
+    ' Все координаты центров считаем в мм, затем конвертируем в дюймы для CreateEllipse2.
+    Const MM_TO_IN As Double = 1# / 25.4
 
-    ' Центры четырёх кругов (мм):
+    Const DOT_R_MM  As Double = 5    ' радиус = 5 мм (диаметр 10 мм)
+    Const OFFSET_MM As Double = 10   ' отступ = 10 мм
+
+    ' Центры в мм:
+    Dim cxMM(3) As Double, cyMM(3) As Double
+    cxMM(0) = minX - OFFSET_MM - DOT_R_MM : cyMM(0) = minY - OFFSET_MM - DOT_R_MM  ' левый нижний
+    cxMM(1) = maxX + OFFSET_MM + DOT_R_MM : cyMM(1) = minY - OFFSET_MM - DOT_R_MM  ' правый нижний
+    cxMM(2) = minX - OFFSET_MM - DOT_R_MM : cyMM(2) = maxY + OFFSET_MM + DOT_R_MM  ' левый верхний
+    cxMM(3) = maxX + OFFSET_MM + DOT_R_MM : cyMM(3) = maxY + OFFSET_MM + DOT_R_MM  ' правый верхний
+
+    ' Конвертируем всё в дюймы для CreateEllipse2:
+    Dim DOT_R_IN As Double:  DOT_R_IN = DOT_R_MM * MM_TO_IN
+
     Dim cx(3) As Double, cy(3) As Double
-    cx(0) = minX - OFFSET - DOT_R : cy(0) = minY - OFFSET - DOT_R  ' левый нижний
-    cx(1) = maxX + OFFSET + DOT_R : cy(1) = minY - OFFSET - DOT_R  ' правый нижний
-    cx(2) = minX - OFFSET - DOT_R : cy(2) = maxY + OFFSET + DOT_R  ' левый верхний
-    cx(3) = maxX + OFFSET + DOT_R : cy(3) = maxY + OFFSET + DOT_R  ' правый верхний
+    Dim k As Integer
+    For k = 0 To 3
+        cx(k) = cxMM(k) * MM_TO_IN
+        cy(k) = cyMM(k) * MM_TO_IN
+    Next k
 
     ' --- Рисуем 4 круга ---
     Dim doc As Document
@@ -224,9 +235,8 @@ Sub DrawCornerDots()
     Dim dots(3) As Shape
 
     Dim dot As Shape
-    Dim k As Integer
     For k = 0 To 3
-        Set dot = doc.ActiveLayer.CreateEllipse2(cx(k), cy(k), DOT_R, DOT_R, 0, 0, False)
+        Set dot = doc.ActiveLayer.CreateEllipse2(cx(k), cy(k), DOT_R_IN, DOT_R_IN, 0, 0, False)
 
         ' Заливка CMYK 0/0/0/100
         dot.Fill.UniformColor.CMYKAssign 0, 0, 0, 100
