@@ -202,36 +202,21 @@ Sub DrawCornerDots()
     Dim maxX As Double: maxX = sel.LeftX + sel.SizeWidth
     Dim maxY As Double: maxY = sel.BottomY + sel.SizeHeight
 
-    ' === ДИАГНОСТИКА — удалить после проверки ===
-    MsgBox "LeftX=" & minX & "  BottomY=" & minY & vbCrLf & _
-           "Width=" & sel.SizeWidth & "  Height=" & sel.SizeHeight, _
-           vbInformation, "Диагностика bbox"
-    ' ============================================
-
     ' --- Параметры точек ---
-    ' LeftX/BottomY возвращают мм. CreateEllipse2 принимает дюймы.
-    ' Переводим bbox и все отступы в дюймы ДО вычисления центров.
+    ' LeftX/BottomY возвращают ДЮЙМЫ. CreateEllipse2 тоже принимает дюймы.
+    ' Конвертируем только отступ и радиус из мм в дюймы.
     Const MM_TO_IN As Double = 1# / 25.4
 
-    Const DOT_R_MM  As Double = 5    ' радиус = 5 мм
-    Const OFFSET_MM As Double = 10   ' отступ = 10 мм
+    Dim DOT_R_IN  As Double: DOT_R_IN  = 5  * MM_TO_IN  ' радиус = 5 мм → дюймы
+    Dim OFFSET_IN As Double: OFFSET_IN = 10 * MM_TO_IN  ' отступ = 10 мм → дюймы
 
-    Dim DOT_R_IN  As Double: DOT_R_IN  = DOT_R_MM  * MM_TO_IN
-    Dim OFFSET_IN As Double: OFFSET_IN = OFFSET_MM * MM_TO_IN
-
-    ' bbox в дюймах:
-    Dim bLeft   As Double: bLeft   = minX * MM_TO_IN
-    Dim bBottom As Double: bBottom = minY * MM_TO_IN
-    Dim bRight  As Double: bRight  = maxX * MM_TO_IN
-    Dim bTop    As Double: bTop    = maxY * MM_TO_IN
-
-    ' Центры четырёх кругов в дюймах:
+    ' bbox уже в дюймах — используем напрямую:
     Dim cx(3) As Double, cy(3) As Double
     Dim k As Integer
-    cx(0) = bLeft  - OFFSET_IN - DOT_R_IN : cy(0) = bBottom - OFFSET_IN - DOT_R_IN  ' левый нижний
-    cx(1) = bRight + OFFSET_IN + DOT_R_IN : cy(1) = bBottom - OFFSET_IN - DOT_R_IN  ' правый нижний
-    cx(2) = bLeft  - OFFSET_IN - DOT_R_IN : cy(2) = bTop    + OFFSET_IN + DOT_R_IN  ' левый верхний
-    cx(3) = bRight + OFFSET_IN + DOT_R_IN : cy(3) = bTop    + OFFSET_IN + DOT_R_IN  ' правый верхний
+    cx(0) = minX - OFFSET_IN - DOT_R_IN : cy(0) = minY - OFFSET_IN - DOT_R_IN  ' левый нижний
+    cx(1) = maxX + OFFSET_IN + DOT_R_IN : cy(1) = minY - OFFSET_IN - DOT_R_IN  ' правый нижний
+    cx(2) = minX - OFFSET_IN - DOT_R_IN : cy(2) = maxY + OFFSET_IN + DOT_R_IN  ' левый верхний
+    cx(3) = maxX + OFFSET_IN + DOT_R_IN : cy(3) = maxY + OFFSET_IN + DOT_R_IN  ' правый верхний
 
     ' --- Рисуем 4 круга ---
     Dim doc As Document
