@@ -202,6 +202,12 @@ Sub DrawCornerDots()
     Dim maxX As Double: maxX = sel.LeftX + sel.SizeWidth
     Dim maxY As Double: maxY = sel.BottomY + sel.SizeHeight
 
+    ' === ДИАГНОСТИКА — удалить после проверки ===
+    MsgBox "LeftX=" & minX & "  BottomY=" & minY & vbCrLf & _
+           "Width=" & sel.SizeWidth & "  Height=" & sel.SizeHeight, _
+           vbInformation, "Диагностика bbox"
+    ' ============================================
+
     ' --- Параметры точек ---
     ' LeftX/BottomY возвращают мм. CreateEllipse2 принимает дюймы.
     ' Переводим bbox и все отступы в дюймы ДО вычисления центров.
