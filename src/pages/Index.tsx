@@ -206,28 +206,30 @@ Sub DrawCornerDots()
     Const DOT_SIZE As Double = 10   ' 10 мм — размер точки
     Const OFFSET   As Double = 10   ' 10 мм — отступ от края выделения
 
-    ' Координаты четырёх углов (левый нижний угол каждого квадрата):
-    '   Левый нижний   — (minX - OFFSET - DOT_SIZE,  minY - OFFSET - DOT_SIZE)
-    '   Правый нижний  — (maxX + OFFSET,              minY - OFFSET - DOT_SIZE)
-    '   Левый верхний  — (minX - OFFSET - DOT_SIZE,  maxY + OFFSET)
-    '   Правый верхний — (maxX + OFFSET,              maxY + OFFSET)
+    ' Координаты центров четырёх кругов:
+    '   Левый нижний   — центр (minX - OFFSET - DOT_SIZE/2,  minY - OFFSET - DOT_SIZE/2)
+    '   Правый нижний  — центр (maxX + OFFSET + DOT_SIZE/2,  minY - OFFSET - DOT_SIZE/2)
+    '   Левый верхний  — центр (minX - OFFSET - DOT_SIZE/2,  maxY + OFFSET + DOT_SIZE/2)
+    '   Правый верхний — центр (maxX + OFFSET + DOT_SIZE/2,  maxY + OFFSET + DOT_SIZE/2)
 
-    Dim corners(3, 1) As Double
-    corners(0, 0) = minX - OFFSET - DOT_SIZE : corners(0, 1) = minY - OFFSET - DOT_SIZE
-    corners(1, 0) = maxX + OFFSET             : corners(1, 1) = minY - OFFSET - DOT_SIZE
-    corners(2, 0) = minX - OFFSET - DOT_SIZE : corners(2, 1) = maxY + OFFSET
-    corners(3, 0) = maxX + OFFSET             : corners(3, 1) = maxY + OFFSET
+    Dim R As Double: R = DOT_SIZE / 2   ' радиус круга
+
+    Dim cx(3) As Double, cy(3) As Double
+    cx(0) = minX - OFFSET - R : cy(0) = minY - OFFSET - R
+    cx(1) = maxX + OFFSET + R : cy(1) = minY - OFFSET - R
+    cx(2) = minX - OFFSET - R : cy(2) = maxY + OFFSET + R
+    cx(3) = maxX + OFFSET + R : cy(3) = maxY + OFFSET + R
 
     ' --- Цвет заливки: CMYK 0/0/0/100 ---
     Dim fillColor As New Color
     fillColor.CMYKAssign 0, 0, 0, 100
 
-    ' --- Рисуем 4 точки ---
+    ' --- Рисуем 4 круга (эллипс с равными осями = окружность) ---
     Dim dot As Shape
     Dim k As Integer
     For k = 0 To 3
-        Set dot = Application.ActiveDocument.ActiveLayer.CreateRectangle2( _
-            corners(k, 0), corners(k, 1), DOT_SIZE, DOT_SIZE)
+        Set dot = Application.ActiveDocument.ActiveLayer.CreateEllipse2( _
+            cx(k), cy(k), R, R)
 
         ' Заливка — чёрная CMYK
         dot.Fill.ApplyUniform fillColor
@@ -453,19 +455,19 @@ export default function Index() {
                 <line x1="160" y1="160" x2="160" y2="183" stroke="#2a2a2a" strokeWidth="0.8" strokeDasharray="2 2"/>
                 <text x="168" y="174" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10 мм</text>
 
-                {/* 4 угловые точки 10×10 мм (в масштабе ~14px = 10мм) */}
+                {/* 4 угловые точки — круги ⌀10 мм (r=7px в масштабе) */}
                 {/* Левый нижний */}
-                <rect x="62" y="166" width="14" height="14" fill="#e8e8e8"/>
-                <text x="69" y="192" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10×10</text>
+                <circle cx="69" cy="173" r="7" fill="#e8e8e8"/>
+                <text x="69" y="192" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">⌀10</text>
                 {/* Правый нижний */}
-                <rect x="244" y="166" width="14" height="14" fill="#e8e8e8"/>
-                <text x="251" y="192" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10×10</text>
+                <circle cx="251" cy="173" r="7" fill="#e8e8e8"/>
+                <text x="251" y="192" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">⌀10</text>
                 {/* Левый верхний */}
-                <rect x="62" y="40" width="14" height="14" fill="#e8e8e8"/>
-                <text x="69" y="36" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10×10</text>
+                <circle cx="69" cy="47" r="7" fill="#e8e8e8"/>
+                <text x="69" y="36" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">⌀10</text>
                 {/* Правый верхний */}
-                <rect x="244" y="40" width="14" height="14" fill="#e8e8e8"/>
-                <text x="251" y="36" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10×10</text>
+                <circle cx="251" cy="47" r="7" fill="#e8e8e8"/>
+                <text x="251" y="36" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">⌀10</text>
 
                 {/* Подписи углов */}
                 <text x="53" y="178" fill="#555" fontSize="6.5" fontFamily="monospace">ЛН</text>
@@ -481,8 +483,8 @@ export default function Index() {
                 <span className="text-[9px] text-[#333] tracking-widest">Граница выделения</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-[#e8e8e8] flex-shrink-0"/>
-                <span className="text-[9px] text-[#333] tracking-widest">Угловая точка 10×10 мм</span>
+                <div className="w-3 h-3 rounded-full bg-[#e8e8e8] flex-shrink-0"/>
+                <span className="text-[9px] text-[#333] tracking-widest">Угловая точка ⌀10 мм</span>
               </div>
             </div>
           </section>
