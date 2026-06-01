@@ -21,19 +21,22 @@ const vbaCodeOutline = `' ============================================
 ' --- ТОЧКА ВХОДА ---
 ' Назначьте эту процедуру на контекстное меню CorelDRAW
 Sub DrawGroupOutline()
-    Dim doc As Document
-    Dim grp As Shape
-
     If Application.Documents.Count = 0 Then
         MsgBox "Нет открытого документа.", vbExclamation, "Ошибка"
         Exit Sub
     End If
 
-    Set doc = Application.ActiveDocument
+    ' Application.ActiveSelection — объект Shape всего выделения (CorelDRAW 26)
+    Dim sel As Shape
+    Set sel = Application.ActiveSelection
 
-    ' Проверяем выделение через ActivePage.Shapes — совместимо с CorelDRAW 26
-    If doc.ActiveSelectionRange.Shapes.Count = 0 Then
-        MsgBox "Выберите группу объектов.", vbExclamation, "Ошибка"
+    If sel Is Nothing Then
+        MsgBox "Выберите объект или группу.", vbExclamation, "Ошибка"
+        Exit Sub
+    End If
+
+    If sel.SizeWidth = 0 And sel.SizeHeight = 0 Then
+        MsgBox "Выберите объект или группу.", vbExclamation, "Ошибка"
         Exit Sub
     End If
 
@@ -43,10 +46,8 @@ Sub DrawGroupOutline()
                         "(контур станет шире и выше на это значение)", _
                         "Отступ контура", "20")
 
-    ' Пользователь нажал Отмена
     If inputVal = "" Then Exit Sub
 
-    ' Проверяем, что введено число
     If Not IsNumeric(inputVal) Then
         MsgBox "Введите корректное числовое значение.", vbExclamation, "Ошибка"
         Exit Sub
@@ -60,20 +61,44 @@ Sub DrawGroupOutline()
         Exit Sub
     End If
 
-    ' Половина суммарного отступа — с каждой стороны
     Dim halfOffset As Double
     halfOffset = totalOffset / 2
 
-    ' Берём первый выделенный объект
-    Set grp = doc.ActiveSelectionRange.Shapes(1)
+    ' Координаты bbox выделения
+    Dim bX As Double: bX = sel.LeftX
+    Dim bY As Double: bY = sel.BottomY
+    Dim bW As Double: bW = sel.SizeWidth
+    Dim bH As Double: bH = sel.SizeHeight
 
-    Dim bounds As BoundingBox
-    bounds = GetGroupBounds(grp)
+    Dim doc As Document
+    Set doc = Application.ActiveDocument
 
-    Dim outline As Shape
-    Set outline = CreateOutlineRect(doc, bounds, halfOffset)
+    ' Создаём прямоугольник-контур
+    Dim rW As Double: rW = bW + halfOffset * 2
+    Dim rH As Double: rH = bH + halfOffset * 2
+    Dim rect As Shape
+    Set rect = doc.ActiveLayer.CreateRectangle2(0, 0, rW, rH)
 
-    PositionOutline outline, bounds, halfOffset
+    rect.Fill.ApplyNoFill
+
+    Dim outlineColor As New Color
+    outlineColor.CMYKAssign 0, 0, 0, 100
+
+    rect.Outline.SetProperties _
+        Width:=0.2, _
+        style:=1, _
+        color:=outlineColor, _
+        arrow1:=Application.ArrowHeads(1), _
+        arrow2:=Application.ArrowHeads(1), _
+        linecaps:=cdrButtLineCaps, _
+        linejoins:=cdrMiterLineJoins, _
+        nib_angle:=0, _
+        stretch:=100, _
+        behind_fill:=False, _
+        scale_on_resize:=False
+
+    ' Позиционируем по центру выделения
+    rect.SetPosition bX - halfOffset, bY - halfOffset
 
     MsgBox "Контур создан! Отступ: " & totalOffset & " мм (" & halfOffset & " мм с каждой стороны).", _
            vbInformation, "Готово"
@@ -152,46 +177,30 @@ const vbaCodeDots = `' ============================================
 
 
 Sub DrawCornerDots()
-    Dim doc As Document
-
     If Application.Documents.Count = 0 Then
         MsgBox "Нет открытого документа.", vbExclamation, "Ошибка"
         Exit Sub
     End If
 
-    Set doc = Application.ActiveDocument
+    ' Application.ActiveSelection — суммарный bbox всего выделения (CorelDRAW 26)
+    Dim sel As Shape
+    Set sel = Application.ActiveSelection
 
-    ' Проверяем выделение через ActiveSelectionRange — совместимо с CorelDRAW 26
-    Dim selRange As ShapeRange
-    Set selRange = doc.ActiveSelectionRange
-
-    If selRange.Shapes.Count = 0 Then
+    If sel Is Nothing Then
         MsgBox "Выберите объект, объекты или группу.", vbExclamation, "Ошибка"
         Exit Sub
     End If
 
-    ' --- Получаем общий bounding box всего выделения ---
-    Dim sel As Shape
-    Dim minX As Double, minY As Double
-    Dim maxX As Double, maxY As Double
-    Dim firstShape As Boolean: firstShape = True
+    If sel.SizeWidth = 0 And sel.SizeHeight = 0 Then
+        MsgBox "Выберите объект, объекты или группу.", vbExclamation, "Ошибка"
+        Exit Sub
+    End If
 
-    Dim i As Integer
-    For i = 1 To selRange.Shapes.Count
-        Set sel = selRange.Shapes(i)
-        If firstShape Then
-            minX = sel.LeftX
-            minY = sel.BottomY
-            maxX = sel.LeftX + sel.SizeWidth
-            maxY = sel.BottomY + sel.SizeHeight
-            firstShape = False
-        Else
-            If sel.LeftX < minX Then minX = sel.LeftX
-            If sel.BottomY < minY Then minY = sel.BottomY
-            If sel.LeftX + sel.SizeWidth > maxX Then maxX = sel.LeftX + sel.SizeWidth
-            If sel.BottomY + sel.SizeHeight > maxY Then maxY = sel.BottomY + sel.SizeHeight
-        End If
-    Next i
+    ' Суммарный bounding box выделения
+    Dim minX As Double: minX = sel.LeftX
+    Dim minY As Double: minY = sel.BottomY
+    Dim maxX As Double: maxX = sel.LeftX + sel.SizeWidth
+    Dim maxY As Double: maxY = sel.BottomY + sel.SizeHeight
 
     ' --- Параметры точек ---
     Const DOT_SIZE As Double = 10   ' 10 мм — размер точки
@@ -217,11 +226,10 @@ Sub DrawCornerDots()
     Dim dot As Shape
     Dim k As Integer
     For k = 0 To 3
-        Set dot = doc.ActiveLayer.CreateRectangle2( _
+        Set dot = Application.ActiveDocument.ActiveLayer.CreateRectangle2( _
             corners(k, 0), corners(k, 1), DOT_SIZE, DOT_SIZE)
 
         ' Заливка — чёрная CMYK
-        dot.Fill.UniformColor.CMYKAssign 0, 0, 0, 100
         dot.Fill.ApplyUniform fillColor
 
         ' Без абриса
@@ -278,8 +286,8 @@ const functionsOutline = [
 ];
 
 const functionsDots = [
-  { fn: "DrawCornerDots()", role: "Единая точка входа", desc: "Находит общий bounding box всего выделения (объект, объекты или группа), рисует 4 точки по углам.", color: "text-[#7c9cbf]" },
-  { fn: "Цикл For i", role: "Расчёт bbox", desc: "Перебирает все выделенные объекты и вычисляет minX / minY / maxX / maxY.", color: "text-[#9cbf7c]" },
+  { fn: "DrawCornerDots()", role: "Единая точка входа", desc: "Получает bbox через Application.ActiveSelection — работает с объектом, несколькими и группой. Рисует 4 точки по углам.", color: "text-[#7c9cbf]" },
+  { fn: "ActiveSelection", role: "Расчёт bbox", desc: "Суммарный bounding box всего выделения — LeftX, BottomY, SizeWidth, SizeHeight без цикла по объектам.", color: "text-[#9cbf7c]" },
   { fn: "corners()", role: "Координаты углов", desc: "Массив 4×2 с координатами левого нижнего угла каждого квадрата-точки.", color: "text-[#bf9c7c]" },
   { fn: "Цикл For k", role: "Создание точек", desc: "Рисует 4 прямоугольника 10×10 мм, задаёт заливку CMYK и убирает абрис.", color: "text-[#bf7cbf]" },
 ];
