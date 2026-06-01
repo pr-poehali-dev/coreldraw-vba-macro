@@ -418,6 +418,76 @@ export default function Index() {
           </div>
         </section>
 
+        {/* Diagram — только для вкладки угловых точек */}
+        {activeTab === "dots" && (
+          <section className="mb-14">
+            <div className="text-[10px] tracking-[0.25em] uppercase text-[#3a3a3a] mb-4">
+              Схема расстановки
+            </div>
+            <div className="bg-[#080808] border border-[#1a1a1a] p-8 flex justify-center">
+              <svg viewBox="0 0 320 220" width="100%" style={{ maxWidth: 460 }} xmlns="http://www.w3.org/2000/svg">
+
+                {/* Сетка фона */}
+                <defs>
+                  <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#161616" strokeWidth="0.5"/>
+                  </pattern>
+                </defs>
+                <rect width="320" height="220" fill="url(#grid)" />
+
+                {/* Выделенный объект */}
+                <rect x="90" y="60" width="140" height="100" fill="#1a1a1a" stroke="#333" strokeWidth="1" strokeDasharray="4 3"/>
+                <text x="160" y="115" textAnchor="middle" fill="#444" fontSize="9" fontFamily="monospace" letterSpacing="1">ВЫДЕЛЕНИЕ</text>
+
+                {/* Отступ — пунктирные линии-выноски */}
+                {/* верх */}
+                <line x1="160" y1="60" x2="160" y2="38" stroke="#2a2a2a" strokeWidth="0.8" strokeDasharray="2 2"/>
+                <text x="168" y="51" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10 мм</text>
+                {/* лево */}
+                <line x1="90" y1="110" x2="58" y2="110" stroke="#2a2a2a" strokeWidth="0.8" strokeDasharray="2 2"/>
+                <text x="60" y="107" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10</text>
+                {/* право */}
+                <line x1="230" y1="110" x2="262" y2="110" stroke="#2a2a2a" strokeWidth="0.8" strokeDasharray="2 2"/>
+                <text x="237" y="107" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10</text>
+                {/* низ */}
+                <line x1="160" y1="160" x2="160" y2="183" stroke="#2a2a2a" strokeWidth="0.8" strokeDasharray="2 2"/>
+                <text x="168" y="174" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10 мм</text>
+
+                {/* 4 угловые точки 10×10 мм (в масштабе ~14px = 10мм) */}
+                {/* Левый нижний */}
+                <rect x="62" y="166" width="14" height="14" fill="#e8e8e8"/>
+                <text x="69" y="192" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10×10</text>
+                {/* Правый нижний */}
+                <rect x="244" y="166" width="14" height="14" fill="#e8e8e8"/>
+                <text x="251" y="192" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10×10</text>
+                {/* Левый верхний */}
+                <rect x="62" y="40" width="14" height="14" fill="#e8e8e8"/>
+                <text x="69" y="36" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10×10</text>
+                {/* Правый верхний */}
+                <rect x="244" y="40" width="14" height="14" fill="#e8e8e8"/>
+                <text x="251" y="36" textAnchor="middle" fill="#2e2e2e" fontSize="7" fontFamily="monospace">10×10</text>
+
+                {/* Подписи углов */}
+                <text x="53" y="178" fill="#555" fontSize="6.5" fontFamily="monospace">ЛН</text>
+                <text x="262" y="178" fill="#555" fontSize="6.5" fontFamily="monospace">ПН</text>
+                <text x="53" y="52" fill="#555" fontSize="6.5" fontFamily="monospace">ЛВ</text>
+                <text x="262" y="52" fill="#555" fontSize="6.5" fontFamily="monospace">ПВ</text>
+              </svg>
+            </div>
+            {/* Легенда */}
+            <div className="flex gap-6 mt-3 px-1">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-px border-t border-dashed border-[#333]"/>
+                <span className="text-[9px] text-[#333] tracking-widest">Граница выделения</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-[#e8e8e8] flex-shrink-0"/>
+                <span className="text-[9px] text-[#333] tracking-widest">Угловая точка 10×10 мм</span>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Code */}
         <section className="mb-14">
           <div className="flex items-center justify-between mb-4">
