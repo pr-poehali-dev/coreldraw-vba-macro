@@ -31,7 +31,8 @@ Sub DrawGroupOutline()
 
     Set doc = Application.ActiveDocument
 
-    If doc.ActiveSelection.Shapes.Count = 0 Then
+    ' Проверяем выделение через ActivePage.Shapes — совместимо с CorelDRAW 26
+    If doc.ActiveSelectionRange.Shapes.Count = 0 Then
         MsgBox "Выберите группу объектов.", vbExclamation, "Ошибка"
         Exit Sub
     End If
@@ -63,7 +64,8 @@ Sub DrawGroupOutline()
     Dim halfOffset As Double
     halfOffset = totalOffset / 2
 
-    Set grp = doc.ActiveSelection.Shapes(1)
+    ' Берём первый выделенный объект
+    Set grp = doc.ActiveSelectionRange.Shapes(1)
 
     Dim bounds As BoundingBox
     bounds = GetGroupBounds(grp)
@@ -159,7 +161,11 @@ Sub DrawCornerDots()
 
     Set doc = Application.ActiveDocument
 
-    If doc.ActiveSelection.Shapes.Count = 0 Then
+    ' Проверяем выделение через ActiveSelectionRange — совместимо с CorelDRAW 26
+    Dim selRange As ShapeRange
+    Set selRange = doc.ActiveSelectionRange
+
+    If selRange.Shapes.Count = 0 Then
         MsgBox "Выберите объект, объекты или группу.", vbExclamation, "Ошибка"
         Exit Sub
     End If
@@ -171,8 +177,8 @@ Sub DrawCornerDots()
     Dim firstShape As Boolean: firstShape = True
 
     Dim i As Integer
-    For i = 1 To doc.ActiveSelection.Shapes.Count
-        Set sel = doc.ActiveSelection.Shapes(i)
+    For i = 1 To selRange.Shapes.Count
+        Set sel = selRange.Shapes(i)
         If firstShape Then
             minX = sel.LeftX
             minY = sel.BottomY
