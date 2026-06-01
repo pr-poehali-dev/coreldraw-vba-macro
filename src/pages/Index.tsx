@@ -203,29 +203,29 @@ Sub DrawCornerDots()
     Dim maxY As Double: maxY = sel.BottomY + sel.SizeHeight
 
     ' --- Параметры точек ---
-    ' LeftX/BottomY — в мм. CreateEllipse2 — в ДЮЙМАХ.
-    ' Все координаты центров считаем в мм, затем конвертируем в дюймы для CreateEllipse2.
+    ' LeftX/BottomY возвращают мм. CreateEllipse2 принимает дюймы.
+    ' Переводим bbox и все отступы в дюймы ДО вычисления центров.
     Const MM_TO_IN As Double = 1# / 25.4
 
-    Const DOT_R_MM  As Double = 5    ' радиус = 5 мм (диаметр 10 мм)
+    Const DOT_R_MM  As Double = 5    ' радиус = 5 мм
     Const OFFSET_MM As Double = 10   ' отступ = 10 мм
 
-    ' Центры в мм:
-    Dim cxMM(3) As Double, cyMM(3) As Double
-    cxMM(0) = minX - OFFSET_MM - DOT_R_MM : cyMM(0) = minY - OFFSET_MM - DOT_R_MM  ' левый нижний
-    cxMM(1) = maxX + OFFSET_MM + DOT_R_MM : cyMM(1) = minY - OFFSET_MM - DOT_R_MM  ' правый нижний
-    cxMM(2) = minX - OFFSET_MM - DOT_R_MM : cyMM(2) = maxY + OFFSET_MM + DOT_R_MM  ' левый верхний
-    cxMM(3) = maxX + OFFSET_MM + DOT_R_MM : cyMM(3) = maxY + OFFSET_MM + DOT_R_MM  ' правый верхний
+    Dim DOT_R_IN  As Double: DOT_R_IN  = DOT_R_MM  * MM_TO_IN
+    Dim OFFSET_IN As Double: OFFSET_IN = OFFSET_MM * MM_TO_IN
 
-    ' Конвертируем всё в дюймы для CreateEllipse2:
-    Dim DOT_R_IN As Double:  DOT_R_IN = DOT_R_MM * MM_TO_IN
+    ' bbox в дюймах:
+    Dim bLeft   As Double: bLeft   = minX * MM_TO_IN
+    Dim bBottom As Double: bBottom = minY * MM_TO_IN
+    Dim bRight  As Double: bRight  = maxX * MM_TO_IN
+    Dim bTop    As Double: bTop    = maxY * MM_TO_IN
 
+    ' Центры четырёх кругов в дюймах:
     Dim cx(3) As Double, cy(3) As Double
     Dim k As Integer
-    For k = 0 To 3
-        cx(k) = cxMM(k) * MM_TO_IN
-        cy(k) = cyMM(k) * MM_TO_IN
-    Next k
+    cx(0) = bLeft  - OFFSET_IN - DOT_R_IN : cy(0) = bBottom - OFFSET_IN - DOT_R_IN  ' левый нижний
+    cx(1) = bRight + OFFSET_IN + DOT_R_IN : cy(1) = bBottom - OFFSET_IN - DOT_R_IN  ' правый нижний
+    cx(2) = bLeft  - OFFSET_IN - DOT_R_IN : cy(2) = bTop    + OFFSET_IN + DOT_R_IN  ' левый верхний
+    cx(3) = bRight + OFFSET_IN + DOT_R_IN : cy(3) = bTop    + OFFSET_IN + DOT_R_IN  ' правый верхний
 
     ' --- Рисуем 4 круга ---
     Dim doc As Document
